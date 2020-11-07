@@ -2,6 +2,7 @@ import {
     Button,
     FormControl,
     FormControlLabel,
+    FormHelperText,
     FormLabel,
     Grid,
     makeStyles,
@@ -73,7 +74,7 @@ const updateUserSchema = Yup.object().shape({
         .email("Must be a valid email!")
         .notOneOf(takenEmailAddresses, "Email already taken")
         .required("Required"),
-    // name: Yup.string().min(2, "To short!").required("Required"),
+    fullname: Yup.string().min(2, "To short!").required("Required"),
     // password: Yup.string()
     //     .min(6, "Password must be atleast 6 characters!")
     //     .required("Required"),
@@ -82,28 +83,11 @@ const updateUserSchema = Yup.object().shape({
     //     .min(6, "Password must be atleast 6 characters!")
     //     .required("Required"),
     // about: Yup.string().required("Required"),
-    // active: Yup.string().required("Required"),
+    // status: Yup.string().required("Required"),
     // rating: Yup.string().required("Required"),
     // stat1: Yup.string().required("Required"),
     // stat2: Yup.string().required("Required"),
 });
-
-const statusOptions = [
-    { label: "Active", value: "true" },
-    { label: "In Active", value: "false" },
-];
-
-// const MyRadio = ({ label, checked, ...props }) => {
-//     const [field] = useField(props);
-//     return (
-//         <FormControlLabel
-//             {...field}
-//             control={<Radio color="primary" />}
-//             label={label}
-//             checked={checked}
-//         />
-//     );
-// };
 
 const convertToBoolean = (value) => {
     if (value == "true") {
@@ -117,22 +101,31 @@ const UpdateUser = ({ match }) => {
     const classes = useStyle();
     const history = useHistory();
     const [profileImage, setProfileImage] = useState("/no-profile.jpg");
-    // const [user, setUser] = useState({});
     const id = match.params.id;
     const { handleSubmit, control, setValue, register, errors } = useForm({
         resolver: yupResolver(updateUserSchema),
     });
     const getDataFromFirestore = () => {
-        // projectFirestore
-        //     .collection("users")
-        //     .doc(id)
-        //     .get()
-        //     .then((doc) => {
-        //         if (doc.exists) {
-        //             setUser(doc.data());
-        //         }
-        //     });
-        setValue("email", "test.com");
+        projectFirestore
+            .collection("users")
+            .doc(id)
+            .get()
+            .then((doc) => {
+                if (doc.exists) {
+                    let user = doc.data();
+                    console.log(user);
+                    setProfileImage(user.avatar);
+                    setValue("email", user.email);
+                    setValue("fullname", user.name);
+                    setValue("about", user.about ? "none" : "None");
+                    setValue("active", user.active ? "active" : "inactive");
+                    setValue("usertype", user.usertype);
+                    setValue(
+                        "verified",
+                        user.verified ? "verified" : "notverified"
+                    );
+                }
+            });
     };
 
     useEffect(() => {
@@ -140,8 +133,18 @@ const UpdateUser = ({ match }) => {
     }, []);
 
     const onSubmit = (data, event) => {
-        event.preventDefault();
-        console.log(data, "test");
+        //mao ni ang mu gana
+        //covertion form string to boolean
+        // console.log(data.active == "active" ? true : false);
+        // console.log(data.verified == "verified" ? true : false);
+        projectFirestore
+            .collection("users")
+            .doc(id)
+            .update({
+                active: data.active == "active" ? true : false,
+                verified: data.verified == "verified" ? true : false,
+            });
+        history.goBack();
     };
 
     return (
@@ -195,21 +198,7 @@ const UpdateUser = ({ match }) => {
                                 </Button>
                             </div>
                         </div>
-                        {/* <TextField
-                            shrink
-                            id="email"
-                            variant="outlined"
-                            label="Email"
-                            name="email"
-                            inputRef={register}
 
-                            // helperText={
-                            //     errors.email && touched.email
-                            //         ? errors.email
-                            //         : ""
-                            // }
-                            // error={errors.email && touched.email ? true : false}
-                        ></TextField> */}
                         <Controller
                             as={
                                 <TextField
@@ -225,16 +214,24 @@ const UpdateUser = ({ match }) => {
                             name="email"
                             defaultValue=""
                         />
+                        <Controller
+                            as={
+                                <TextField
+                                    variant="outlined"
+                                    label="Fullname"
+                                    helperText={
+                                        errors.fullname
+                                            ? errors.fullname.message
+                                            : ""
+                                    }
+                                    error={errors.fullname ? true : false}
+                                />
+                            }
+                            control={control}
+                            name="fullname"
+                            defaultValue=""
+                        />
 
-                        <TextField
-                            variant="outlined"
-                            label="Full Name"
-                            name="name"
-                            // helperText={
-                            //     errors.name && touched.name ? errors.name : ""
-                            // }
-                            // error={errors.name && touched.name ? true : false}
-                        ></TextField>
                         <TextField
                             variant="outlined"
                             label="Password"
@@ -271,162 +268,93 @@ const UpdateUser = ({ match }) => {
                         ></TextField>
                     </Grid>
                     <Grid item xs={6}>
-                        <TextField
-                            variant="outlined"
-                            label="About"
+                        <Controller
+                            as={
+                                <TextField
+                                    variant="outlined"
+                                    label="About"
+                                    helperText={
+                                        errors.about ? errors.about.message : ""
+                                    }
+                                    error={errors.about ? true : false}
+                                />
+                            }
+                            control={control}
                             name="about"
-                            multiline
-                            rows={2}
-                            // helperText={
-                            //     errors.about && touched.about
-                            //         ? errors.about
-                            //         : ""
-                            // }
-                            // error={errors.about && touched.about ? true : false}
-                        ></TextField>
-                        {/* <Field
-                                        name="active"
-                                        label="Status"
-                                        component={FormikRadioGroup}
-                                        options={statusOptions}
-                                    /> */}
-                        {/* <Select
-                            // onChange={handleChange("active")}
-                            inputProps={{
-                                name: "active",
-                            }}
+                            defaultValue=""
+                        />
+                        <FormControl
+                            component="fieldset"
+                            error={Boolean(errors.active)}
                         >
-                            <MenuItem value="true">Active</MenuItem>
-                            <MenuItem value="false">In Active</MenuItem>
-                        </Select> */}
-                        {/* <FormControl component="fieldset">
-                                        <FormLabel component="legend">
-                                            Status
-                                        </FormLabel>
-                                        <RadioGroup
-                                            aria-label="gender"
-                                            name="active"
-                                            value={values.active}
-                                            onChange={handleChange}
-                                            defaultValue="true"
-                                        >
-                                            <FormControlLabel
-                                                value="true"
-                                                control={<Radio />}
-                                                label="Active"
-                                            />
-                                            <FormControlLabel
-                                                value="false"
-                                                control={<Radio />}
-                                                label="In Active"
-                                            />
-                                        </RadioGroup>
-                                    </FormControl> */}
-                        {/* <FormControl>
-                            <FormLabel>Status</FormLabel>
-                            <MyRadio
+                            <FormLabel component="legend">Status</FormLabel>
+                            <Controller
+                                control={control}
                                 name="active"
-                                type="radio"
-                                value="true"
-                                label="Active"
+                                defaultValue=""
+                                as={
+                                    <Select label="Status">
+                                        <MenuItem value="active">
+                                            Active
+                                        </MenuItem>
+                                        <MenuItem value="inactive">
+                                            In Active
+                                        </MenuItem>
+                                    </Select>
+                                }
                             />
-                            <MyRadio
-                                name="active"
-                                type="radio"
-                                value="false"
-                                label="In Active"
-                            />
-                        </FormControl> */}
-                        {/* <TextField
-                                        variant="outlined"
-                                        label="Rating"
-                                        name="rating"
-                                        value={values.rating}
-                                        helperText={
-                                            errors.rating && touched.rating
-                                                ? errors.rating
-                                                : ""
-                                        }
-                                        error={
-                                            errors.rating && touched.rating
-                                                ? true
-                                                : false
-                                        }
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                    ></TextField> */}
-                        {/* <FormControl>
-                            <FormLabel>User Type</FormLabel>
-                            <MyRadio
-                                name="usertype"
-                                type="radio"
-                                value="Household"
-                                label="Household"
-                            />
-                            <MyRadio
-                                name="usertype"
-                                type="radio"
-                                value="Junkshop"
-                                label="Junkshop"
-                            />
+                            <FormHelperText>
+                                {errors.active && errors.active.message}
+                            </FormHelperText>
                         </FormControl>
-                        <FormControl>
-                            <FormLabel>Verified</FormLabel>
-                            <MyRadio
-                                name="verified"
-                                type="radio"
-                                value="false"
-                                // checked={
-                                //     values.verified ? "" : "checked"
-                                // }
-                                label="Not Verified"
+                        <FormControl
+                            component="fieldset"
+                            error={Boolean(errors.usertype)}
+                        >
+                            <FormLabel component="legend">User Type</FormLabel>
+                            <Controller
+                                control={control}
+                                name="usertype"
+                                defaultValue=""
+                                as={
+                                    <Select label="User Type">
+                                        <MenuItem value="Household">
+                                            Household
+                                        </MenuItem>
+                                        <MenuItem value="Junkshop">
+                                            Junkshop
+                                        </MenuItem>
+                                    </Select>
+                                }
                             />
-                            <MyRadio
+                            <FormHelperText>
+                                {errors.usertype && errors.usertype.message}
+                            </FormHelperText>
+                        </FormControl>
+                        <FormControl
+                            component="fieldset"
+                            error={Boolean(errors.verified)}
+                        >
+                            <FormLabel component="legend">Verified</FormLabel>
+                            <Controller
+                                control={control}
                                 name="verified"
-                                type="radio"
-                                value="true"
-                                // checked={
-                                //     values.verified ? "checked" : ""
-                                // }
-                                label="Verified"
+                                defaultValue=""
+                                as={
+                                    <Select label="Verified">
+                                        <MenuItem value="verified">
+                                            Verified
+                                        </MenuItem>
+                                        <MenuItem value="notverified">
+                                            Not Verified
+                                        </MenuItem>
+                                    </Select>
+                                }
                             />
-                        </FormControl> */}
-                        {/* <TextField
-                                        variant="outlined"
-                                        label="Stat1"
-                                        name="stat1"
-                                        value={values.stat1}
-                                        helperText={
-                                            errors.stat1 && touched.stat1
-                                                ? errors.stat1
-                                                : ""
-                                        }
-                                        error={
-                                            errors.stat1 && touched.stat1
-                                                ? true
-                                                : false
-                                        }
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                    ></TextField>
-                                    <TextField
-                                        variant="outlined"
-                                        label="Stat2"
-                                        name="stat2"
-                                        value={values.stat2}
-                                        helperText={
-                                            errors.stat2 && touched.stat2
-                                                ? errors.stat2
-                                                : ""
-                                        }
-                                        error={
-                                            errors.stat2 && touched.stat2
-                                                ? true
-                                                : false
-                                        }
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                    ></TextField> */}
+                            <FormHelperText>
+                                {errors.verified && errors.verified.message}
+                            </FormHelperText>
+                        </FormControl>
 
                         <div>
                             <Button

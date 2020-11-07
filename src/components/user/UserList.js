@@ -12,10 +12,13 @@ import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
 import { Add, Edit, PeopleOutlineTwoTone } from "@material-ui/icons";
 import SearchIcon from "@material-ui/icons/Search";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { projectFirestore } from "../../config/firebase";
 import PageHeader from "../templates/PageHeader";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Switch from "@material-ui/core/Switch";
+import FormGroup from "@material-ui/core/FormGroup";
 
 function createData(name, code, population, size) {
     const density = population / size;
@@ -57,6 +60,15 @@ export default function UserList() {
     const [search, setSearch] = React.useState("");
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [users, setUsers] = useState([]);
+    const [activeState, setActiveState] = useState("");
+
+    const handleActiveChange = (event) => {
+        setActiveState(false);
+    };
+
+    // const handleActiveChange = (event) => {
+    //     setActiveState(!true);
+    // };
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -78,6 +90,7 @@ export default function UserList() {
                     console.log("check users", users);
                 });
                 setUsers(users);
+                setActiveState(users.active);
             });
     };
 
@@ -130,8 +143,8 @@ export default function UserList() {
                     <Table stickyHeader aria-label="sticky table">
                         <TableHead>
                             <TableRow>
-                                <TableCell>Name</TableCell>
                                 <TableCell>Email</TableCell>
+                                <TableCell>Name</TableCell>
                                 <TableCell>User Type</TableCell>
                                 <TableCell>Status</TableCell>
                                 <TableCell>Verified</TableCell>
@@ -153,16 +166,16 @@ export default function UserList() {
                                     page * rowsPerPage,
                                     page * rowsPerPage + rowsPerPage
                                 )
-                                .map((users) => {
+                                .map((users, i) => {
                                     return (
                                         <TableRow
                                             hover
                                             role="checkbox"
                                             tabIndex={-1}
-                                            key={users.id}
+                                            key={i}
                                         >
-                                            <TableCell>{users.name}</TableCell>
                                             <TableCell>{users.email}</TableCell>
+                                            <TableCell>{users.name}</TableCell>
                                             <TableCell>
                                                 {users.usertype}
                                             </TableCell>
@@ -170,11 +183,50 @@ export default function UserList() {
                                                 {users.active
                                                     ? "Active"
                                                     : "Inactive"}
+                                                {/* <FormControlLabel
+                                                    control={
+                                                        <Switch
+                                                            key={users.id}
+                                                            checked={
+                                                                activeState
+                                                            }
+                                                            onChange={
+                                                                handleActiveChange
+                                                            }
+                                                            name="active"
+                                                            color="primary"
+                                                        />
+                                                    }
+                                                    label={
+                                                        users.active
+                                                            ? "Active"
+                                                            : "Inactive"
+                                                    }
+                                                /> */}
                                             </TableCell>
                                             <TableCell>
                                                 {users.verified
                                                     ? "Verified"
-                                                    : "Not verified"}
+                                                    : "Not Verified"}
+                                                {/* <FormControlLabel
+                                                    control={
+                                                        <Switch
+                                                            checked={
+                                                                users.verified
+                                                            }
+                                                            // onChange={
+                                                            //     handleChange
+                                                            // }
+                                                            name="verified"
+                                                            color="primary"
+                                                        />
+                                                    }
+                                                    label={
+                                                        users.verified
+                                                            ? "Verified"
+                                                            : "Not verified"
+                                                    }
+                                                /> */}
                                             </TableCell>
                                             <TableCell>
                                                 <IconButton
