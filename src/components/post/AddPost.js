@@ -1,18 +1,26 @@
+import { yupResolver } from "@hookform/resolvers/yup";
 import {
     Button,
     FormControl,
-    FormControlLabel,
+    FormHelperText,
     FormLabel,
     Grid,
     makeStyles,
+    MenuItem,
     Paper,
-    Radio,
-    RadioGroup,
+    Select,
     TextField,
 } from "@material-ui/core";
-import { Form, Formik } from "formik";
 import React, { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { useHistory } from "react-router-dom";
 import * as Yup from "yup";
+import {
+    projectAuth,
+    projectFirestore,
+    projectStorage,
+} from "../../config/firebase";
+import useGeolocation from "../hooks/useGeolocation";
 
 const useStyle = makeStyles((theme) => ({
     root: {
@@ -43,7 +51,7 @@ const useStyle = makeStyles((theme) => ({
             borderRadius: "50%",
         },
         // width: 200,
-        // height: 200,20
+        // height: 200,
         // objectFit: "cover",
         // borderRadius: "50%",
     },
@@ -52,225 +60,267 @@ const useStyle = makeStyles((theme) => ({
     },
 }));
 
-const AddUserSchema = Yup.object().shape({});
+const takenEmailAddresses = [
+    "test@test.com",
+    "test1@test.com",
+    "test2@test.com",
+    "test3@test.com",
+];
+
+const addPostSchema = Yup.object().shape({
+    title: Yup.string().required("Required"),
+    category: Yup.string().required("Required"),
+    description: Yup.string().required("Required"),
+    askingprice: Yup.string().required("Required"),
+    location: Yup.string().required("Required"),
+});
 
 const AddPost = () => {
     const classes = useStyle();
-    const [image, setImage] = useState("");
-    const handleSubmit = (values, action) => {
-        console.log(values);
+    const [image1, setImage1] = useState("/no-profile.jpg");
+    const [image2, setImage2] = useState("/no-profile.jpg");
+    const [image3, setImage3] = useState("/no-profile.jpg");
+    const history = useHistory();
+    const { handleSubmit, control, setValue, register, errors } = useForm({
+        resolver: yupResolver(addPostSchema),
+    });
+    const location = useGeolocation();
+
+    const onSubmit = (data) => {
+        // const {
+        //     image1,
+        //     image2,
+        //     image3,
+        //     title,
+        //     category,
+        //     description,
+        //     askingprice,
+        //     location,
+        // } = data;
+        console.log(data);
     };
 
     return (
         <Paper className={classes.pageContent}>
-            <Formik
-                initialValues={{
-                    title: "",
-                    name: "",
-                    description: "",
-                    askingPrice: "",
-                    category: "",
-                    location: "",
-                    status: "",
-                }}
-                onSubmit={handleSubmit}
-                validationSchema={AddUserSchema}
+            <form
+                className={classes.root}
+                autoComplete="off"
+                noValidate
+                onSubmit={handleSubmit(onSubmit)}
             >
-                {(props) => {
-                    const {
-                        values,
-                        touched,
-                        errors,
-                        handleBlur,
-                        handleChange,
-                        isSubmitting,
-                    } = props;
-                    return (
-                        <Form
-                            className={classes.root}
-                            autoComplete="off"
-                            noValidate
+                <Grid container>
+                    <Grid item xs={6}>
+                        <div className={classes.profile}>
+                            <div className="image-wrapper">
+                                <div>
+                                    <FormLabel>Image 1</FormLabel>
+                                </div>
+                                <img src={image1} className="profile-image" />
+                                <Button variant="contained" component="label">
+                                    Upload Image
+                                    <input
+                                        type="file"
+                                        ref={register}
+                                        name="image1"
+                                        accept="image/*"
+                                        id="image1"
+                                        style={{ display: "none" }}
+                                        onChange={(event) => {
+                                            //set values file to current selected image
+                                            // setFieldValue(
+                                            //     "avatar",
+                                            //     event.currentTarget.files[0]
+                                            // );
+                                            // preview image before uploading
+                                            const reader = new FileReader();
+                                            reader.onload = () => {
+                                                if (reader.readyState === 2) {
+                                                    setImage1(reader.result);
+                                                }
+                                            };
+                                            reader.readAsDataURL(
+                                                event.target.files[0]
+                                            );
+                                        }}
+                                    />
+                                </Button>
+                            </div>
+                        </div>
+                        <div className={classes.profile}>
+                            <div className="image-wrapper">
+                                <div>
+                                    <FormLabel>Image 2</FormLabel>
+                                </div>
+                                <img src={image2} className="profile-image" />
+                                <Button variant="contained" component="label">
+                                    Upload Image
+                                    <input
+                                        type="file"
+                                        ref={register}
+                                        name="image2"
+                                        accept="image/*"
+                                        id="image2"
+                                        style={{ display: "none" }}
+                                        onChange={(event) => {
+                                            //set values file to current selected image
+                                            // setFieldValue(
+                                            //     "avatar",
+                                            //     event.currentTarget.files[0]
+                                            // );
+                                            // preview image before uploading
+                                            const reader = new FileReader();
+                                            reader.onload = () => {
+                                                if (reader.readyState === 2) {
+                                                    setImage2(reader.result);
+                                                }
+                                            };
+                                            reader.readAsDataURL(
+                                                event.target.files[0]
+                                            );
+                                        }}
+                                    />
+                                </Button>
+                            </div>
+                        </div>
+                        <div className={classes.profile}>
+                            <div className="image-wrapper">
+                                <div>
+                                    <FormLabel>Image 3</FormLabel>
+                                </div>
+                                <img src={image3} className="profile-image" />
+                                <Button variant="contained" component="label">
+                                    Upload Image
+                                    <input
+                                        type="file"
+                                        ref={register}
+                                        name="image3"
+                                        accept="image/*"
+                                        id="image3"
+                                        style={{ display: "none" }}
+                                        onChange={(event) => {
+                                            //set values file to current selected image
+                                            // setFieldValue(
+                                            //     "avatar",
+                                            //     event.currentTarget.files[0]
+                                            // );
+                                            // preview image before uploading
+                                            const reader = new FileReader();
+                                            reader.onload = () => {
+                                                if (reader.readyState === 2) {
+                                                    setImage3(reader.result);
+                                                }
+                                            };
+                                            reader.readAsDataURL(
+                                                event.target.files[0]
+                                            );
+                                        }}
+                                    />
+                                </Button>
+                            </div>
+                        </div>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <TextField
+                            variant="outlined"
+                            label="Title"
+                            name="title"
+                            inputRef={register}
+                            helperText={
+                                errors.title ? errors.title.message : ""
+                            }
+                            error={errors.title ? true : false}
+                        ></TextField>
+
+                        <FormControl
+                            component="fieldset"
+                            error={Boolean(errors.category)}
                         >
-                            <Grid container>
-                                <Grid item xs={6}>
-                                    <TextField
-                                        variant="outlined"
-                                        label="Title"
-                                        name="title"
-                                        value={values.title}
-                                        helperText={
-                                            errors.title && touched.title
-                                                ? errors.title
-                                                : ""
-                                        }
-                                        error={
-                                            errors.title && touched.title
-                                                ? true
-                                                : false
-                                        }
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                    ></TextField>
+                            <FormLabel component="legend">Category</FormLabel>
+                            <Controller
+                                id="category"
+                                control={control}
+                                name="category"
+                                defaultValue=""
+                                as={
+                                    <Select label="Select Category">
+                                        <MenuItem value="Bakal">Bakal</MenuItem>
+                                        <MenuItem value="Bote">Bote</MenuItem>
+                                        <MenuItem value="Plastic">
+                                            Plastic
+                                        </MenuItem>
+                                        <MenuItem value="Appliances">
+                                            Appliances
+                                        </MenuItem>
+                                        <MenuItem value="Assorted">
+                                            Assorted
+                                        </MenuItem>
+                                    </Select>
+                                }
+                            />
+                            <FormHelperText>
+                                {errors.category && errors.category.message}
+                            </FormHelperText>
+                        </FormControl>
+                        <TextField
+                            variant="outlined"
+                            label="Description"
+                            name="description"
+                            inputRef={register}
+                            helperText={
+                                errors.description
+                                    ? errors.description.message
+                                    : ""
+                            }
+                            error={errors.description ? true : false}
+                        ></TextField>
+                        <TextField
+                            variant="outlined"
+                            label="Asking Price"
+                            name="askingprice"
+                            inputRef={register}
+                            helperText={
+                                errors.askingprice
+                                    ? errors.askingprice.message
+                                    : ""
+                            }
+                            error={errors.askingprice ? true : false}
+                        ></TextField>
+                        <TextField
+                            variant="outlined"
+                            label="Location"
+                            name="location"
+                            inputRef={register}
+                            helperText={
+                                errors.location ? errors.location.message : ""
+                            }
+                            error={errors.location ? true : false}
+                        ></TextField>
 
-                                    <TextField
-                                        variant="outlined"
-                                        label="Posted By:"
-                                        name="name"
-                                        value={values.name}
-                                        helperText={
-                                            errors.name && touched.name
-                                                ? errors.name
-                                                : ""
-                                        }
-                                        error={
-                                            errors.name && touched.name
-                                                ? true
-                                                : false
-                                        }
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                    ></TextField>
-                                    <TextField
-                                        variant="outlined"
-                                        label="Description"
-                                        name="description"
-                                        multiline
-                                        rows={2}
-                                        value={values.description}
-                                        helperText={
-                                            errors.description &&
-                                            touched.description
-                                                ? errors.description
-                                                : ""
-                                        }
-                                        error={
-                                            errors.description &&
-                                            touched.description
-                                                ? true
-                                                : false
-                                        }
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                    ></TextField>
-                                    <TextField
-                                        variant="outlined"
-                                        label="Asking Price:"
-                                        name="askingPrice"
-                                        value={values.askingPrice}
-                                        helperText={
-                                            errors.askingPrice &&
-                                            touched.askingPrice
-                                                ? errors.askingPrice
-                                                : ""
-                                        }
-                                        error={
-                                            errors.askingPrice &&
-                                            touched.askingPrice
-                                                ? true
-                                                : false
-                                        }
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                    ></TextField>
-                                    <TextField
-                                        variant="outlined"
-                                        label="Category:"
-                                        name="category"
-                                        value={values.category}
-                                        helperText={
-                                            errors.category && touched.category
-                                                ? errors.category
-                                                : ""
-                                        }
-                                        error={
-                                            errors.category && touched.category
-                                                ? true
-                                                : false
-                                        }
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                    ></TextField>
-
-                                    <FormControl>
-                                        <FormLabel>Status</FormLabel>
-                                        <RadioGroup
-                                            defaultValue="notSold"
-                                            row={true}
-                                        >
-                                            <FormControlLabel
-                                                value="active"
-                                                control={
-                                                    <Radio color="primary" />
-                                                }
-                                                label="Sold"
-                                            />
-                                            <FormControlLabel
-                                                value="notSold"
-                                                control={
-                                                    <Radio color="default" />
-                                                }
-                                                label="Not Sold"
-                                            />
-                                        </RadioGroup>
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <div className={classes.profile}>
-                                        <div className="image-wrapper">
-                                            <img
-                                                src="/no-profile.jpg"
-                                                className="profile-image"
-                                            />
-                                            <input
-                                                type="file"
-                                                id="imageInput"
-                                                // hidden="hidden"
-                                            />
-                                            <img
-                                                src="/no-profile.jpg"
-                                                className="profile-image"
-                                            />
-                                            <input
-                                                type="file"
-                                                id="imageInput"
-                                                // hidden="hidden"
-                                            />
-                                            <img
-                                                src="/no-profile.jpg"
-                                                className="profile-image"
-                                            />
-                                            <input
-                                                type="file"
-                                                id="imageInput"
-                                                // hidden="hidden"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Button
-                                            type="submit"
-                                            variant="contained"
-                                            color="primary"
-                                            className={classes.button}
-                                            disabled={isSubmitting}
-                                        >
-                                            Submit
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            color="default"
-                                            className={classes.button}
-                                        >
-                                            Reset
-                                        </Button>
-                                    </div>
-                                </Grid>
-                            </Grid>
-                        </Form>
-                    );
-                }}
-            </Formik>
+                        <div>
+                            <div>
+                                {location.loaded
+                                    ? JSON.stringify(location)
+                                    : "Not loaded"}
+                            </div>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                className={classes.button}
+                            >
+                                Submit
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="default"
+                                className={classes.button}
+                            >
+                                Reset
+                            </Button>
+                        </div>
+                    </Grid>
+                </Grid>
+            </form>
         </Paper>
     );
 };

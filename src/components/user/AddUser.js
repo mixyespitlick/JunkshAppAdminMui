@@ -1,29 +1,25 @@
+import { yupResolver } from "@hookform/resolvers/yup";
 import {
     Button,
     FormControl,
-    FormControlLabel,
+    FormHelperText,
     FormLabel,
     Grid,
     makeStyles,
-    Paper,
-    Radio,
-    RadioGroup,
-    TextField,
-    Select,
     MenuItem,
-    FormHelperText,
+    Paper,
+    Select,
+    TextField,
 } from "@material-ui/core";
-import { Field, Form, Formik, useField } from "formik";
 import React, { useState } from "react";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { Controller, useForm } from "react-hook-form";
+import { useHistory } from "react-router-dom";
 import * as Yup from "yup";
 import {
     projectAuth,
     projectFirestore,
     projectStorage,
 } from "../../config/firebase";
-import { useHistory, Link } from "react-router-dom";
-import { useForm, Controller } from "react-hook-form";
 
 const useStyle = makeStyles((theme) => ({
     root: {
